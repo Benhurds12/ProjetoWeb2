@@ -121,3 +121,13 @@ Acreditamos que gestores de TI vão utilizar o sistema para controlar os ativos 
 ## 📄 Licença
 
 Este projeto é desenvolvido para fins educacionais na disciplina **DIM0547 - Desenvolvimento de Sistemas Web II com Go** (2026.1), sob orientação do Prof. Fernando Figueira.
+
+
+
+## Execução do Projeto
+
+go run . - Executar a aplicação
+
+docker-compose down - Pausar o container
+
+docker-composer up -d - Executar o container

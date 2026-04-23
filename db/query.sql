@@ -67,3 +67,53 @@ RETURNING *;
 -- name: DeleteBem :exec
 DELETE FROM bens
 WHERE id = $1;
+
+-- FORNECEDORES
+
+-- name: CreateFornecedor :one
+INSERT INTO fornecedores (nome, cnpj, contato)
+VALUES ($1, $2, $3)
+RETURNING id, nome, cnpj, contato, created_at;
+
+-- name: ListFornecedores :many
+SELECT id, nome, cnpj, contato, created_at
+FROM fornecedores;
+
+-- name: GetFornecedorByID :one
+SELECT id, nome, cnpj, contato, created_at
+FROM fornecedores
+WHERE id = $1;
+
+-- name: UpdateFornecedor :one
+UPDATE fornecedores
+SET nome = $1,
+    cnpj = $2,
+    contato = $3
+WHERE id = $4
+RETURNING id, nome, cnpj, contato, created_at;
+
+-- name: DeleteFornecedor :exec
+DELETE FROM fornecedores
+WHERE id = $1;
+
+-- FABRICANTES
+
+-- name: CreateFabricante :one
+INSERT INTO fabricantes (nome, cnpj)
+VALUES ($1, $2)
+RETURNING *;
+
+-- name: GetFabricanteByID :one
+SELECT * FROM fabricantes
+WHERE id = $1;
+
+-- name: DeleteFabricante :exec
+DELETE FROM fabricantes
+WHERE id = $1;
+
+-- name: UpdateFabricante :one
+UPDATE fabricantes
+SET nome = $1, cnpj = $2
+WHERE id = $3
+RETURNING *;
+

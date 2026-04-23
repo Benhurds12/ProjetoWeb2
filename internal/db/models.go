@@ -19,6 +19,21 @@ type Ben struct {
 	CreatedAt sql.NullTime
 }
 
+type Fabricante struct {
+	ID        int32
+	Nome      string
+	Cnpj      string
+	CreatedAt sql.NullTime
+}
+
+type Fornecedore struct {
+	ID        int32
+	Nome      string
+	Cnpj      string
+	Contato   string
+	CreatedAt sql.NullTime
+}
+
 type Setore struct {
 	ID        int32
 	Nome      string

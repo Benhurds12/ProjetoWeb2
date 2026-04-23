@@ -46,6 +46,58 @@ func (q *Queries) CreateBem(ctx context.Context, arg CreateBemParams) (Ben, erro
 	return i, err
 }
 
+const createFabricante = `-- name: CreateFabricante :one
+
+INSERT INTO fabricantes (nome, cnpj)
+VALUES ($1, $2)
+RETURNING id, nome, cnpj, created_at
+`
+
+type CreateFabricanteParams struct {
+	Nome string
+	Cnpj string
+}
+
+// FABRICANTES
+func (q *Queries) CreateFabricante(ctx context.Context, arg CreateFabricanteParams) (Fabricante, error) {
+	row := q.db.QueryRowContext(ctx, createFabricante, arg.Nome, arg.Cnpj)
+	var i Fabricante
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.Cnpj,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const createFornecedor = `-- name: CreateFornecedor :one
+
+INSERT INTO fornecedores (nome, cnpj, contato)
+VALUES ($1, $2, $3)
+RETURNING id, nome, cnpj, contato, created_at
+`
+
+type CreateFornecedorParams struct {
+	Nome    string
+	Cnpj    string
+	Contato string
+}
+
+// FORNECEDORES
+func (q *Queries) CreateFornecedor(ctx context.Context, arg CreateFornecedorParams) (Fornecedore, error) {
+	row := q.db.QueryRowContext(ctx, createFornecedor, arg.Nome, arg.Cnpj, arg.Contato)
+	var i Fornecedore
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.Cnpj,
+		&i.Contato,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const createSetor = `-- name: CreateSetor :one
 INSERT INTO setores (nome, local)
 VALUES ($1, $2)
@@ -111,6 +163,26 @@ func (q *Queries) DeleteBem(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const deleteFabricante = `-- name: DeleteFabricante :exec
+DELETE FROM fabricantes
+WHERE id = $1
+`
+
+func (q *Queries) DeleteFabricante(ctx context.Context, id int32) error {
+	_, err := q.db.ExecContext(ctx, deleteFabricante, id)
+	return err
+}
+
+const deleteFornecedor = `-- name: DeleteFornecedor :exec
+DELETE FROM fornecedores
+WHERE id = $1
+`
+
+func (q *Queries) DeleteFornecedor(ctx context.Context, id int32) error {
+	_, err := q.db.ExecContext(ctx, deleteFornecedor, id)
+	return err
+}
+
 const deleteSetor = `-- name: DeleteSetor :exec
 DELETE FROM setores
 WHERE id = $1
@@ -145,6 +217,42 @@ func (q *Queries) GetBemByID(ctx context.Context, id uuid.UUID) (Ben, error) {
 		&i.Status,
 		&i.Tipo,
 		&i.SetorID,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getFabricanteByID = `-- name: GetFabricanteByID :one
+SELECT id, nome, cnpj, created_at FROM fabricantes
+WHERE id = $1
+`
+
+func (q *Queries) GetFabricanteByID(ctx context.Context, id int32) (Fabricante, error) {
+	row := q.db.QueryRowContext(ctx, getFabricanteByID, id)
+	var i Fabricante
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.Cnpj,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getFornecedorByID = `-- name: GetFornecedorByID :one
+SELECT id, nome, cnpj, contato, created_at
+FROM fornecedores
+WHERE id = $1
+`
+
+func (q *Queries) GetFornecedorByID(ctx context.Context, id int32) (Fornecedore, error) {
+	row := q.db.QueryRowContext(ctx, getFornecedorByID, id)
+	var i Fornecedore
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.Cnpj,
+		&i.Contato,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -224,6 +332,40 @@ func (q *Queries) ListBens(ctx context.Context) ([]Ben, error) {
 			&i.Status,
 			&i.Tipo,
 			&i.SetorID,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listFornecedores = `-- name: ListFornecedores :many
+SELECT id, nome, cnpj, contato, created_at
+FROM fornecedores
+`
+
+func (q *Queries) ListFornecedores(ctx context.Context) ([]Fornecedore, error) {
+	rows, err := q.db.QueryContext(ctx, listFornecedores)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Fornecedore
+	for rows.Next() {
+		var i Fornecedore
+		if err := rows.Scan(
+			&i.ID,
+			&i.Nome,
+			&i.Cnpj,
+			&i.Contato,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -335,6 +477,65 @@ func (q *Queries) UpdateBem(ctx context.Context, arg UpdateBemParams) (Ben, erro
 		&i.Status,
 		&i.Tipo,
 		&i.SetorID,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const updateFabricante = `-- name: UpdateFabricante :one
+UPDATE fabricantes
+SET nome = $1, cnpj = $2
+WHERE id = $3
+RETURNING id, nome, cnpj, created_at
+`
+
+type UpdateFabricanteParams struct {
+	Nome string
+	Cnpj string
+	ID   int32
+}
+
+func (q *Queries) UpdateFabricante(ctx context.Context, arg UpdateFabricanteParams) (Fabricante, error) {
+	row := q.db.QueryRowContext(ctx, updateFabricante, arg.Nome, arg.Cnpj, arg.ID)
+	var i Fabricante
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.Cnpj,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const updateFornecedor = `-- name: UpdateFornecedor :one
+UPDATE fornecedores
+SET nome = $1,
+    cnpj = $2,
+    contato = $3
+WHERE id = $4
+RETURNING id, nome, cnpj, contato, created_at
+`
+
+type UpdateFornecedorParams struct {
+	Nome    string
+	Cnpj    string
+	Contato string
+	ID      int32
+}
+
+func (q *Queries) UpdateFornecedor(ctx context.Context, arg UpdateFornecedorParams) (Fornecedore, error) {
+	row := q.db.QueryRowContext(ctx, updateFornecedor,
+		arg.Nome,
+		arg.Cnpj,
+		arg.Contato,
+		arg.ID,
+	)
+	var i Fornecedore
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.Cnpj,
+		&i.Contato,
 		&i.CreatedAt,
 	)
 	return i, err

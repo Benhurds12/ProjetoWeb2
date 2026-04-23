@@ -7,7 +7,67 @@ package db
 
 import (
 	"context"
+	"database/sql"
+
+	"github.com/google/uuid"
 )
+
+const createBem = `-- name: CreateBem :one
+INSERT INTO bens (id, nome, status, tipo, setor_id)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, nome, status, tipo, setor_id, created_at
+`
+
+type CreateBemParams struct {
+	ID      uuid.UUID
+	Nome    string
+	Status  sql.NullString
+	Tipo    string
+	SetorID sql.NullInt32
+}
+
+func (q *Queries) CreateBem(ctx context.Context, arg CreateBemParams) (Ben, error) {
+	row := q.db.QueryRowContext(ctx, createBem,
+		arg.ID,
+		arg.Nome,
+		arg.Status,
+		arg.Tipo,
+		arg.SetorID,
+	)
+	var i Ben
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.Status,
+		&i.Tipo,
+		&i.SetorID,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const createSetor = `-- name: CreateSetor :one
+INSERT INTO setores (nome, local)
+VALUES ($1, $2)
+RETURNING id, nome, local, created_at
+`
+
+type CreateSetorParams struct {
+	Nome  string
+	Local string
+}
+
+func (q *Queries) CreateSetor(ctx context.Context, arg CreateSetorParams) (Setore, error) {
+	row := q.db.QueryRowContext(ctx, createSetor, arg.Nome, arg.Local)
+	var i Setore
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.Local,
+		&i.CreatedAt,
+	)
+	return i, err
+}
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (nome, email, cpf, password)
@@ -41,6 +101,26 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const deleteBem = `-- name: DeleteBem :exec
+DELETE FROM bens
+WHERE id = $1
+`
+
+func (q *Queries) DeleteBem(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteBem, id)
+	return err
+}
+
+const deleteSetor = `-- name: DeleteSetor :exec
+DELETE FROM setores
+WHERE id = $1
+`
+
+func (q *Queries) DeleteSetor(ctx context.Context, id int32) error {
+	_, err := q.db.ExecContext(ctx, deleteSetor, id)
+	return err
+}
+
 const deleteUser = `-- name: DeleteUser :exec
 DELETE FROM users
 WHERE id = $1
@@ -49,6 +129,42 @@ WHERE id = $1
 func (q *Queries) DeleteUser(ctx context.Context, id int32) error {
 	_, err := q.db.ExecContext(ctx, deleteUser, id)
 	return err
+}
+
+const getBemByID = `-- name: GetBemByID :one
+SELECT id, nome, status, tipo, setor_id, created_at FROM bens
+WHERE id = $1
+`
+
+func (q *Queries) GetBemByID(ctx context.Context, id uuid.UUID) (Ben, error) {
+	row := q.db.QueryRowContext(ctx, getBemByID, id)
+	var i Ben
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.Status,
+		&i.Tipo,
+		&i.SetorID,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getSetorByID = `-- name: GetSetorByID :one
+SELECT id, nome, local, created_at FROM setores
+WHERE id = $1
+`
+
+func (q *Queries) GetSetorByID(ctx context.Context, id int32) (Setore, error) {
+	row := q.db.QueryRowContext(ctx, getSetorByID, id)
+	var i Setore
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.Local,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
@@ -89,6 +205,72 @@ func (q *Queries) GetUserByID(ctx context.Context, id int32) (User, error) {
 	return i, err
 }
 
+const listBens = `-- name: ListBens :many
+SELECT id, nome, status, tipo, setor_id, created_at FROM bens
+`
+
+func (q *Queries) ListBens(ctx context.Context) ([]Ben, error) {
+	rows, err := q.db.QueryContext(ctx, listBens)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Ben
+	for rows.Next() {
+		var i Ben
+		if err := rows.Scan(
+			&i.ID,
+			&i.Nome,
+			&i.Status,
+			&i.Tipo,
+			&i.SetorID,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSetores = `-- name: ListSetores :many
+SELECT id, nome, local, created_at FROM setores
+`
+
+func (q *Queries) ListSetores(ctx context.Context) ([]Setore, error) {
+	rows, err := q.db.QueryContext(ctx, listSetores)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Setore
+	for rows.Next() {
+		var i Setore
+		if err := rows.Scan(
+			&i.ID,
+			&i.Nome,
+			&i.Local,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUsers = `-- name: ListUsers :many
 SELECT id, nome, email, cpf, password, created_at FROM users
 `
@@ -121,6 +303,66 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateBem = `-- name: UpdateBem :one
+UPDATE bens
+SET nome = $1, status = $2, tipo = $3, setor_id = $4
+WHERE id = $5
+RETURNING id, nome, status, tipo, setor_id, created_at
+`
+
+type UpdateBemParams struct {
+	Nome    string
+	Status  sql.NullString
+	Tipo    string
+	SetorID sql.NullInt32
+	ID      uuid.UUID
+}
+
+func (q *Queries) UpdateBem(ctx context.Context, arg UpdateBemParams) (Ben, error) {
+	row := q.db.QueryRowContext(ctx, updateBem,
+		arg.Nome,
+		arg.Status,
+		arg.Tipo,
+		arg.SetorID,
+		arg.ID,
+	)
+	var i Ben
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.Status,
+		&i.Tipo,
+		&i.SetorID,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const updateSetor = `-- name: UpdateSetor :one
+UPDATE setores
+SET nome = $1, local = $2
+WHERE id = $3
+RETURNING id, nome, local, created_at
+`
+
+type UpdateSetorParams struct {
+	Nome  string
+	Local string
+	ID    int32
+}
+
+func (q *Queries) UpdateSetor(ctx context.Context, arg UpdateSetorParams) (Setore, error) {
+	row := q.db.QueryRowContext(ctx, updateSetor, arg.Nome, arg.Local, arg.ID)
+	var i Setore
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.Local,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const updateUser = `-- name: UpdateUser :one

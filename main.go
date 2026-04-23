@@ -28,6 +28,8 @@ func main() {
 	authHandler := &handlers.AuthHandler{
 		Queries: queries,
 	}
+	sectorHandler := &handlers.SectorHandler{Queries: queries}
+	assetHandler := &handlers.AssetHandler{Queries: queries}
 
 	r := chi.NewRouter()
 
@@ -43,6 +45,19 @@ func main() {
 		r.Get("/users/{id}", userHandler.GetUser)
 		r.Put("/users/{id}", userHandler.UpdateUser)
 		r.Delete("/users/{id}", userHandler.DeleteUser)
+
+		r.Post("/setores", sectorHandler.CreateSetor)
+		r.Get("/setores", sectorHandler.ListSetores)
+		r.Get("/setores/{id}", sectorHandler.GetSetor)
+		r.Put("/setores/{id}", sectorHandler.UpdateSetor)
+		r.Delete("/setores/{id}", sectorHandler.DeleteSetor)
+
+		r.Post("/bens", assetHandler.CreateBem)
+		r.Get("/bens", assetHandler.ListBens)
+		r.Get("/bens/{id}", assetHandler.GetBem)
+		r.Put("/bens/{id}", assetHandler.UpdateBem)
+		r.Delete("/bens/{id}", assetHandler.DeleteBem)
+
 	})
 
 	log.Println("Servidor rodando em :8080")

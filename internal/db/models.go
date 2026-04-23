@@ -6,7 +6,25 @@ package db
 
 import (
 	"database/sql"
+
+	"github.com/google/uuid"
 )
+
+type Ben struct {
+	ID        uuid.UUID
+	Nome      string
+	Status    sql.NullString
+	Tipo      string
+	SetorID   sql.NullInt32
+	CreatedAt sql.NullTime
+}
+
+type Setore struct {
+	ID        int32
+	Nome      string
+	Local     string
+	CreatedAt sql.NullTime
+}
 
 type User struct {
 	ID        int32

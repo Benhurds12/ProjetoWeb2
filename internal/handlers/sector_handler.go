@@ -5,13 +5,17 @@ import (
 	"net/http"
 	"strconv"
 
-	"projetoweb2/internal/db"
+	"projetoweb2/internal/services"
 
 	"github.com/go-chi/chi/v5"
 )
 
 type SectorHandler struct {
-	Queries *db.Queries
+	Service *services.SectorService
+}
+
+func NewSectorHandler(service *services.SectorService) *SectorHandler {
+	return &SectorHandler{Service: service}
 }
 
 func (h *SectorHandler) CreateSetor(w http.ResponseWriter, r *http.Request) {
@@ -21,16 +25,13 @@ func (h *SectorHandler) CreateSetor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Dados inválidos", http.StatusBadRequest)
+		http.Error(w, "dados inválidos", http.StatusBadRequest)
 		return
 	}
 
-	setor, err := h.Queries.CreateSetor(r.Context(), db.CreateSetorParams{
-		Nome:  req.Nome,
-		Local: req.Local,
-	})
+	setor, err := h.Service.CreateSetor(r.Context(), req.Nome, req.Local)
 	if err != nil {
-		http.Error(w, "Erro ao criar setor: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -43,13 +44,13 @@ func (h *SectorHandler) GetSetor(w http.ResponseWriter, r *http.Request) {
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
+		http.Error(w, "id inválido", http.StatusBadRequest)
 		return
 	}
 
-	setor, err := h.Queries.GetSetorByID(r.Context(), int32(id))
+	setor, err := h.Service.GetSetor(r.Context(), int32(id))
 	if err != nil {
-		http.Error(w, "Setor não encontrado", http.StatusNotFound)
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -57,9 +58,9 @@ func (h *SectorHandler) GetSetor(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SectorHandler) ListSetores(w http.ResponseWriter, r *http.Request) {
-	setores, err := h.Queries.ListSetores(r.Context())
+	setores, err := h.Service.ListSetores(r.Context())
 	if err != nil {
-		http.Error(w, "Erro ao listar setores", http.StatusInternalServerError)
+		http.Error(w, "erro ao listar setores", http.StatusInternalServerError)
 		return
 	}
 
@@ -71,7 +72,7 @@ func (h *SectorHandler) UpdateSetor(w http.ResponseWriter, r *http.Request) {
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
+		http.Error(w, "id inválido", http.StatusBadRequest)
 		return
 	}
 
@@ -81,17 +82,13 @@ func (h *SectorHandler) UpdateSetor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Dados inválidos", http.StatusBadRequest)
+		http.Error(w, "dados inválidos", http.StatusBadRequest)
 		return
 	}
 
-	setor, err := h.Queries.UpdateSetor(r.Context(), db.UpdateSetorParams{
-		ID:    int32(id),
-		Nome:  req.Nome,
-		Local: req.Local,
-	})
+	setor, err := h.Service.UpdateSetor(r.Context(), int32(id), req.Nome, req.Local)
 	if err != nil {
-		http.Error(w, "Erro ao atualizar setor: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -103,12 +100,13 @@ func (h *SectorHandler) DeleteSetor(w http.ResponseWriter, r *http.Request) {
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
+		http.Error(w, "id inválido", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.Queries.DeleteSetor(r.Context(), int32(id)); err != nil {
-		http.Error(w, "Erro ao deletar setor", http.StatusInternalServerError)
+	err = h.Service.DeleteSetor(r.Context(), int32(id))
+	if err != nil {
+		http.Error(w, "erro ao deletar setor", http.StatusInternalServerError)
 		return
 	}
 

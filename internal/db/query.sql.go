@@ -239,6 +239,24 @@ func (q *Queries) GetFabricanteByID(ctx context.Context, id int32) (Fabricante, 
 	return i, err
 }
 
+const getFornecedorByCnpj = `-- name: GetFornecedorByCnpj :one
+SELECT id, nome, cnpj, contato, created_at FROM fornecedores
+WHERE cnpj = $1
+`
+
+func (q *Queries) GetFornecedorByCnpj(ctx context.Context, cnpj string) (Fornecedore, error) {
+	row := q.db.QueryRowContext(ctx, getFornecedorByCnpj, cnpj)
+	var i Fornecedore
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.Cnpj,
+		&i.Contato,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getFornecedorByID = `-- name: GetFornecedorByID :one
 SELECT id, nome, cnpj, contato, created_at
 FROM fornecedores
@@ -270,6 +288,42 @@ func (q *Queries) GetSetorByID(ctx context.Context, id int32) (Setore, error) {
 		&i.ID,
 		&i.Nome,
 		&i.Local,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getSetorByNome = `-- name: GetSetorByNome :one
+SELECT id, nome, local, created_at FROM setores
+WHERE nome = $1
+`
+
+func (q *Queries) GetSetorByNome(ctx context.Context, nome string) (Setore, error) {
+	row := q.db.QueryRowContext(ctx, getSetorByNome, nome)
+	var i Setore
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.Local,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getUserByCpf = `-- name: GetUserByCpf :one
+SELECT id, nome, email, cpf, password, created_at FROM users
+WHERE cpf = $1
+`
+
+func (q *Queries) GetUserByCpf(ctx context.Context, cpf string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByCpf, cpf)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.Email,
+		&i.Cpf,
+		&i.Password,
 		&i.CreatedAt,
 	)
 	return i, err

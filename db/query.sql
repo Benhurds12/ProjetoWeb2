@@ -24,6 +24,10 @@ SET nome = $1, email = $2, cpf = $3
 WHERE id = $4
 RETURNING *;
 
+-- name: GetUserByCpf :one
+SELECT * FROM users
+WHERE cpf = $1;
+
 -- name: CreateSetor :one
 INSERT INTO setores (nome, local)
 VALUES ($1, $2)
@@ -45,6 +49,10 @@ RETURNING *;
 -- name: DeleteSetor :exec
 DELETE FROM setores
 WHERE id = $1;
+
+-- name: GetSetorByNome :one
+SELECT * FROM setores
+WHERE nome = $1;
 
 -- name: CreateBem :one
 INSERT INTO bens (id, nome, status, tipo, setor_id)
@@ -96,6 +104,9 @@ RETURNING id, nome, cnpj, contato, created_at;
 DELETE FROM fornecedores
 WHERE id = $1;
 
+-- name: GetFornecedorByCnpj :one
+SELECT * FROM fornecedores
+WHERE cnpj = $1;
 -- FABRICANTES
 
 -- name: CreateFabricante :one

@@ -5,16 +5,19 @@ import (
 	"net/http"
 	"strconv"
 
-	"projetoweb2/internal/db"
+	"projetoweb2/internal/services"
 
 	"github.com/go-chi/chi/v5"
 )
 
 type SupplierHandler struct {
-	Queries *db.Queries
+	Service *services.SupplierService
 }
 
-// CREATE
+func NewSupplierHandler(service *services.SupplierService) *SupplierHandler {
+	return &SupplierHandler{Service: service}
+}
+
 func (h *SupplierHandler) CreateFornecedor(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Nome    string `json:"nome"`
@@ -23,17 +26,19 @@ func (h *SupplierHandler) CreateFornecedor(w http.ResponseWriter, r *http.Reques
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Dados inválidos", http.StatusBadRequest)
+		http.Error(w, "dados inválidos", http.StatusBadRequest)
 		return
 	}
 
-	fornecedor, err := h.Queries.CreateFornecedor(r.Context(), db.CreateFornecedorParams{
-		Nome:    req.Nome,
-		Cnpj:    req.Cnpj,
-		Contato: req.Contato,
-	})
+	fornecedor, err := h.Service.CreateFornecedor(
+		r.Context(),
+		req.Nome,
+		req.Cnpj,
+		req.Contato,
+	)
+
 	if err != nil {
-		http.Error(w, "Erro ao criar fornecedor", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -41,41 +46,40 @@ func (h *SupplierHandler) CreateFornecedor(w http.ResponseWriter, r *http.Reques
 	json.NewEncoder(w).Encode(fornecedor)
 }
 
-// LIST
 func (h *SupplierHandler) ListFornecedores(w http.ResponseWriter, r *http.Request) {
-	fornecedores, err := h.Queries.ListFornecedores(r.Context())
+	fornecedores, err := h.Service.ListFornecedores(r.Context())
 	if err != nil {
-		http.Error(w, "Erro ao listar fornecedores", http.StatusInternalServerError)
+		http.Error(w, "erro ao listar fornecedores", http.StatusInternalServerError)
 		return
 	}
 
 	json.NewEncoder(w).Encode(fornecedores)
 }
 
-// GET
 func (h *SupplierHandler) GetFornecedor(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
+
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
+		http.Error(w, "id inválido", http.StatusBadRequest)
 		return
 	}
 
-	fornecedor, err := h.Queries.GetFornecedorByID(r.Context(), int32(id))
+	fornecedor, err := h.Service.GetFornecedor(r.Context(), int32(id))
 	if err != nil {
-		http.Error(w, "Fornecedor não encontrado", http.StatusNotFound)
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
 	json.NewEncoder(w).Encode(fornecedor)
 }
 
-// UPDATE
 func (h *SupplierHandler) UpdateFornecedor(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
+
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
+		http.Error(w, "id inválido", http.StatusBadRequest)
 		return
 	}
 
@@ -86,35 +90,38 @@ func (h *SupplierHandler) UpdateFornecedor(w http.ResponseWriter, r *http.Reques
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Dados inválidos", http.StatusBadRequest)
+		http.Error(w, "dados inválidos", http.StatusBadRequest)
 		return
 	}
 
-	fornecedor, err := h.Queries.UpdateFornecedor(r.Context(), db.UpdateFornecedorParams{
-		ID:      int32(id),
-		Nome:    req.Nome,
-		Cnpj:    req.Cnpj,
-		Contato: req.Contato,
-	})
+	fornecedor, err := h.Service.UpdateFornecedor(
+		r.Context(),
+		int32(id),
+		req.Nome,
+		req.Cnpj,
+		req.Contato,
+	)
+
 	if err != nil {
-		http.Error(w, "Erro ao atualizar fornecedor", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	json.NewEncoder(w).Encode(fornecedor)
 }
 
-// DELETE
 func (h *SupplierHandler) DeleteFornecedor(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
+
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
+		http.Error(w, "id inválido", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.Queries.DeleteFornecedor(r.Context(), int32(id)); err != nil {
-		http.Error(w, "Erro ao deletar fornecedor", http.StatusInternalServerError)
+	err = h.Service.DeleteFornecedor(r.Context(), int32(id))
+	if err != nil {
+		http.Error(w, "erro ao deletar fornecedor", http.StatusInternalServerError)
 		return
 	}
 

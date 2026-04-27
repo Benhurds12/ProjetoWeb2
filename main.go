@@ -8,6 +8,7 @@ import (
 	"projetoweb2/internal/db"
 	"projetoweb2/internal/handlers"
 	"projetoweb2/internal/middleware"
+	"projetoweb2/internal/services"
 
 	"github.com/go-chi/chi/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -21,24 +22,24 @@ func main() {
 
 	queries := db.New(conn)
 
-	userHandler := &handlers.UserHandler{
-		Queries: queries,
-	}
+	userService := services.NewUserService(queries)
+
+	userHandler := handlers.NewUserHandler(userService)
 
 	authHandler := &handlers.AuthHandler{
 		Queries: queries,
 	}
-	sectorHandler := &handlers.SectorHandler{Queries: queries}
-	assetHandler := &handlers.AssetHandler{Queries: queries}
+	sectorService := services.NewSectorService(queries)
+	sectorHandler := handlers.NewSectorHandler(sectorService)
+	assetService := services.NewAssetService(queries)
+	assetHandler := handlers.NewAssetHandler(assetService)
 
 	r := chi.NewRouter()
 
-	// Rotas públicas
 	r.Post("/users", userHandler.CreateUser)
 	r.Post("/login", authHandler.Login)
 	r.Post("/logout", authHandler.Logout)
 
-	// Rotas protegidas
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.AuthMiddleware)
 		r.Get("/users", userHandler.ListUsers)

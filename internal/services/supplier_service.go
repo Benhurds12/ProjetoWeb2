@@ -9,10 +9,10 @@ import (
 )
 
 type SupplierService struct {
-	Queries *db.Queries
+	Queries db.Querier
 }
 
-func NewSupplierService(q *db.Queries) *SupplierService {
+func NewSupplierService(q db.Querier) *SupplierService {
 	return &SupplierService{Queries: q}
 }
 

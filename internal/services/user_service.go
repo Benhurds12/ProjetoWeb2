@@ -11,10 +11,10 @@ import (
 )
 
 type UserService struct {
-	Queries *db.Queries
+	Queries db.Querier
 }
 
-func NewUserService(q *db.Queries) *UserService {
+func NewUserService(q db.Querier) *UserService {
 	return &UserService{Queries: q}
 }
 

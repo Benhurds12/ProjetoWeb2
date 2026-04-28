@@ -9,10 +9,10 @@ import (
 )
 
 type SectorService struct {
-	Queries *db.Queries
+	Queries db.Querier
 }
 
-func NewSectorService(q *db.Queries) *SectorService {
+func NewSectorService(q db.Querier) *SectorService {
 	return &SectorService{Queries: q}
 }
 

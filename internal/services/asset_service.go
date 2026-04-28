@@ -11,10 +11,10 @@ import (
 )
 
 type AssetService struct {
-	Queries *db.Queries
+	Queries db.Querier
 }
 
-func NewAssetService(q *db.Queries) *AssetService {
+func NewAssetService(q db.Querier) *AssetService {
 	return &AssetService{Queries: q}
 }
 

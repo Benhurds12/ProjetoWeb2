@@ -13,17 +13,27 @@ import (
 )
 
 const createBem = `-- name: CreateBem :one
-INSERT INTO bens (id, nome, status, tipo, setor_id)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING id, nome, status, tipo, setor_id, created_at
+INSERT INTO bens (
+    id,
+    nome,
+    status,
+    tipo,
+    setor_id,
+    fornecedor_id,
+    fabricante_id
+)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING id, nome, status, tipo, setor_id, fornecedor_id, fabricante_id, created_at
 `
 
 type CreateBemParams struct {
-	ID      uuid.UUID
-	Nome    string
-	Status  sql.NullString
-	Tipo    string
-	SetorID sql.NullInt32
+	ID           uuid.UUID
+	Nome         string
+	Status       sql.NullString
+	Tipo         string
+	SetorID      sql.NullInt32
+	FornecedorID sql.NullInt32
+	FabricanteID sql.NullInt32
 }
 
 func (q *Queries) CreateBem(ctx context.Context, arg CreateBemParams) (Ben, error) {
@@ -33,6 +43,8 @@ func (q *Queries) CreateBem(ctx context.Context, arg CreateBemParams) (Ben, erro
 		arg.Status,
 		arg.Tipo,
 		arg.SetorID,
+		arg.FornecedorID,
+		arg.FabricanteID,
 	)
 	var i Ben
 	err := row.Scan(
@@ -41,6 +53,8 @@ func (q *Queries) CreateBem(ctx context.Context, arg CreateBemParams) (Ben, erro
 		&i.Status,
 		&i.Tipo,
 		&i.SetorID,
+		&i.FornecedorID,
+		&i.FabricanteID,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -204,7 +218,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id int32) error {
 }
 
 const getBemByID = `-- name: GetBemByID :one
-SELECT id, nome, status, tipo, setor_id, created_at FROM bens
+SELECT id, nome, status, tipo, setor_id, fornecedor_id, fabricante_id, created_at FROM bens
 WHERE id = $1
 `
 
@@ -217,6 +231,25 @@ func (q *Queries) GetBemByID(ctx context.Context, id uuid.UUID) (Ben, error) {
 		&i.Status,
 		&i.Tipo,
 		&i.SetorID,
+		&i.FornecedorID,
+		&i.FabricanteID,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getFabricanteByCnpj = `-- name: GetFabricanteByCnpj :one
+SELECT id, nome, cnpj, created_at FROM fabricantes
+WHERE cnpj = $1
+`
+
+func (q *Queries) GetFabricanteByCnpj(ctx context.Context, cnpj string) (Fabricante, error) {
+	row := q.db.QueryRowContext(ctx, getFabricanteByCnpj, cnpj)
+	var i Fabricante
+	err := row.Scan(
+		&i.ID,
+		&i.Nome,
+		&i.Cnpj,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -368,7 +401,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int32) (User, error) {
 }
 
 const listBens = `-- name: ListBens :many
-SELECT id, nome, status, tipo, setor_id, created_at FROM bens
+SELECT id, nome, status, tipo, setor_id, fornecedor_id, fabricante_id, created_at FROM bens
 `
 
 func (q *Queries) ListBens(ctx context.Context) ([]Ben, error) {
@@ -386,6 +419,41 @@ func (q *Queries) ListBens(ctx context.Context) ([]Ben, error) {
 			&i.Status,
 			&i.Tipo,
 			&i.SetorID,
+			&i.FornecedorID,
+			&i.FabricanteID,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listFabricantes = `-- name: ListFabricantes :many
+SELECT id, nome, cnpj, created_at FROM fabricantes
+ORDER BY id
+`
+
+func (q *Queries) ListFabricantes(ctx context.Context) ([]Fabricante, error) {
+	rows, err := q.db.QueryContext(ctx, listFabricantes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Fabricante
+	for rows.Next() {
+		var i Fabricante
+		if err := rows.Scan(
+			&i.ID,
+			&i.Nome,
+			&i.Cnpj,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -503,17 +571,25 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 
 const updateBem = `-- name: UpdateBem :one
 UPDATE bens
-SET nome = $1, status = $2, tipo = $3, setor_id = $4
-WHERE id = $5
-RETURNING id, nome, status, tipo, setor_id, created_at
+SET
+    nome = $1,
+    status = $2,
+    tipo = $3,
+    setor_id = $4,
+    fornecedor_id = $5,
+    fabricante_id = $6
+WHERE id = $7
+RETURNING id, nome, status, tipo, setor_id, fornecedor_id, fabricante_id, created_at
 `
 
 type UpdateBemParams struct {
-	Nome    string
-	Status  sql.NullString
-	Tipo    string
-	SetorID sql.NullInt32
-	ID      uuid.UUID
+	Nome         string
+	Status       sql.NullString
+	Tipo         string
+	SetorID      sql.NullInt32
+	FornecedorID sql.NullInt32
+	FabricanteID sql.NullInt32
+	ID           uuid.UUID
 }
 
 func (q *Queries) UpdateBem(ctx context.Context, arg UpdateBemParams) (Ben, error) {
@@ -522,6 +598,8 @@ func (q *Queries) UpdateBem(ctx context.Context, arg UpdateBemParams) (Ben, erro
 		arg.Status,
 		arg.Tipo,
 		arg.SetorID,
+		arg.FornecedorID,
+		arg.FabricanteID,
 		arg.ID,
 	)
 	var i Ben
@@ -531,6 +609,8 @@ func (q *Queries) UpdateBem(ctx context.Context, arg UpdateBemParams) (Ben, erro
 		&i.Status,
 		&i.Tipo,
 		&i.SetorID,
+		&i.FornecedorID,
+		&i.FabricanteID,
 		&i.CreatedAt,
 	)
 	return i, err

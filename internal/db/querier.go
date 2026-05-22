@@ -24,6 +24,7 @@ type Querier interface {
 	DeleteSetor(ctx context.Context, id int32) error
 	DeleteUser(ctx context.Context, id int32) error
 	GetBemByID(ctx context.Context, id uuid.UUID) (Ben, error)
+	GetFabricanteByCnpj(ctx context.Context, cnpj string) (Fabricante, error)
 	GetFabricanteByID(ctx context.Context, id int32) (Fabricante, error)
 	GetFornecedorByCnpj(ctx context.Context, cnpj string) (Fornecedore, error)
 	GetFornecedorByID(ctx context.Context, id int32) (Fornecedore, error)
@@ -33,6 +34,7 @@ type Querier interface {
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id int32) (User, error)
 	ListBens(ctx context.Context) ([]Ben, error)
+	ListFabricantes(ctx context.Context) ([]Fabricante, error)
 	ListFornecedores(ctx context.Context) ([]Fornecedore, error)
 	ListSetores(ctx context.Context) ([]Setore, error)
 	ListUsers(ctx context.Context) ([]User, error)

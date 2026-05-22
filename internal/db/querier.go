@@ -35,6 +35,7 @@ type Querier interface {
 	ListBens(ctx context.Context) ([]Ben, error)
 	ListFornecedores(ctx context.Context) ([]Fornecedore, error)
 	ListSetores(ctx context.Context) ([]Setore, error)
+	ListSetoresWithBens(ctx context.Context) ([]ListSetoresWithBensRow, error)
 	ListUsers(ctx context.Context) ([]User, error)
 	UpdateBem(ctx context.Context, arg UpdateBemParams) (Ben, error)
 	UpdateFabricante(ctx context.Context, arg UpdateFabricanteParams) (Fabricante, error)

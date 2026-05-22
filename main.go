@@ -33,6 +33,10 @@ func main() {
 	sectorHandler := handlers.NewSectorHandler(sectorService)
 	assetService := services.NewAssetService(queries)
 	assetHandler := handlers.NewAssetHandler(assetService)
+	supplierService := services.NewSupplierService(queries)
+	supplierHandler := handlers.NewSupplierHandler(supplierService)
+	manufacturerService := services.NewManufacturerService(queries)
+	manufacturerHandler := handlers.NewManufacturerHandler(manufacturerService)
 
 	r := chi.NewRouter()
 
@@ -60,6 +64,17 @@ func main() {
 		r.Put("/bens/{id}", assetHandler.UpdateBem)
 		r.Delete("/bens/{id}", assetHandler.DeleteBem)
 
+		r.Post("/fornecedores", supplierHandler.CreateFornecedor)
+		r.Get("/fornecedores", supplierHandler.ListFornecedores)
+		r.Get("/fornecedores/{id}", supplierHandler.GetFornecedor)
+		r.Put("/fornecedores/{id}", supplierHandler.UpdateFornecedor)
+		r.Delete("/fornecedores/{id}", supplierHandler.DeleteFornecedor)
+
+		r.Post("/fabricantes", manufacturerHandler.CreateFabricante)
+		r.Get("/fabricantes", manufacturerHandler.ListFabricantes)
+		r.Get("/fabricantes/{id}", manufacturerHandler.GetFabricante)
+		r.Put("/fabricantes/{id}", manufacturerHandler.UpdateFabricante)
+		r.Delete("/fabricantes/{id}", manufacturerHandler.DeleteFabricante)
 	})
 
 	log.Println("Servidor rodando em :8080")

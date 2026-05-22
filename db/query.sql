@@ -68,8 +68,16 @@ LEFT JOIN bens b ON b.setor_id = s.id
 ORDER BY s.id ASC, b.created_at ASC;
 
 -- name: CreateBem :one
-INSERT INTO bens (id, nome, status, tipo, setor_id)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO bens (
+    id,
+    nome,
+    status,
+    tipo,
+    setor_id,
+    fornecedor_id,
+    fabricante_id
+)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING *;
 
 -- name: GetBemByID :one
@@ -81,8 +89,14 @@ SELECT * FROM bens;
 
 -- name: UpdateBem :one
 UPDATE bens
-SET nome = $1, status = $2, tipo = $3, setor_id = $4
-WHERE id = $5
+SET
+    nome = $1,
+    status = $2,
+    tipo = $3,
+    setor_id = $4,
+    fornecedor_id = $5,
+    fabricante_id = $6
+WHERE id = $7
 RETURNING *;
 
 -- name: DeleteBem :exec
@@ -141,3 +155,10 @@ SET nome = $1, cnpj = $2
 WHERE id = $3
 RETURNING *;
 
+-- name: ListFabricantes :many
+SELECT * FROM fabricantes
+ORDER BY id;
+
+-- name: GetFabricanteByCnpj :one
+SELECT * FROM fabricantes
+WHERE cnpj = $1;

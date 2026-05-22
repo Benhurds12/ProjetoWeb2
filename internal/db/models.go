@@ -11,12 +11,14 @@ import (
 )
 
 type Ben struct {
-	ID        uuid.UUID
-	Nome      string
-	Status    sql.NullString
-	Tipo      string
-	SetorID   sql.NullInt32
-	CreatedAt sql.NullTime
+	ID           uuid.UUID
+	Nome         string
+	Status       sql.NullString
+	Tipo         string
+	SetorID      sql.NullInt32
+	FornecedorID sql.NullInt32
+	FabricanteID sql.NullInt32
+	CreatedAt    sql.NullTime
 }
 
 type Fabricante struct {

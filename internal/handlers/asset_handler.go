@@ -20,10 +20,12 @@ func NewAssetHandler(service *services.AssetService) *AssetHandler {
 
 func (h *AssetHandler) CreateBem(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Nome    string `json:"nome"`
-		Tipo    string `json:"tipo"`
-		Status  string `json:"status"`
-		SetorID *int32 `json:"setor_id"`
+		Nome         string `json:"nome"`
+		Tipo         string `json:"tipo"`
+		Status       string `json:"status"`
+		SetorID      *int32 `json:"setor_id"`
+		FornecedorID *int32 `json:"fornecedor_id"`
+		FabricanteID *int32 `json:"fabricante_id"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -31,7 +33,15 @@ func (h *AssetHandler) CreateBem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bem, err := h.Service.CreateBem(r.Context(), req.Nome, req.Tipo, req.Status, req.SetorID)
+	bem, err := h.Service.CreateBem(
+		r.Context(),
+		req.Nome,
+		req.Tipo,
+		req.Status,
+		req.SetorID,
+		req.FornecedorID,
+		req.FabricanteID)
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -79,10 +89,12 @@ func (h *AssetHandler) UpdateBem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Nome    string `json:"nome"`
-		Tipo    string `json:"tipo"`
-		Status  string `json:"status"`
-		SetorID *int32 `json:"setor_id"`
+		Nome         string `json:"nome"`
+		Tipo         string `json:"tipo"`
+		Status       string `json:"status"`
+		SetorID      *int32 `json:"setor_id"`
+		FornecedorID *int32 `json:"fornecedor_id"`
+		FabricanteID *int32 `json:"fabricante_id"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -90,7 +102,16 @@ func (h *AssetHandler) UpdateBem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bem, err := h.Service.UpdateBem(r.Context(), id, req.Nome, req.Tipo, req.Status, req.SetorID)
+	bem, err := h.Service.UpdateBem(
+		r.Context(),
+		id, req.Nome,
+		req.Tipo,
+		req.Status,
+		req.SetorID,
+		req.FornecedorID,
+		req.FabricanteID,
+	)
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

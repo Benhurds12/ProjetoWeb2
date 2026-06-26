@@ -1,0 +1,105 @@
+.page{
+
+    width:100%;
+
+    min-height:100vh;
+
+    display:flex;
+
+}
+
+.content{
+
+    flex:1;
+
+    padding:40px;
+
+}
+
+.card{
+
+    background:white;
+
+    padding:25px;
+
+    border-radius:var(--radius);
+
+    box-shadow:var(--shadow);
+
+}
+
+.title{
+
+    margin-bottom:25px;
+
+    color:var(--text);
+
+}
+
+.form{
+
+    display:grid;
+
+    gap:15px;
+
+    margin-bottom:30px;
+
+}
+
+.form input,
+.form select{
+
+    padding:12px;
+
+    border-radius:8px;
+
+    border:1px solid var(--border);
+
+}
+
+.form button{
+
+    background:var(--primary);
+
+    color:white;
+
+    border:none;
+
+    padding:12px;
+
+    border-radius:8px;
+
+    transition:.3s;
+
+}
+
+.form button:hover{
+
+    background:var(--secondary);
+
+}
+
+table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+}
+
+thead{
+
+    background:#f2f2f2;
+
+}
+
+th,
+td{
+
+    padding:14px;
+
+    border-bottom:1px solid #ddd;
+
+    text-align:left;
+
+}

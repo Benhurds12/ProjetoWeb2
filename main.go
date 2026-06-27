@@ -11,6 +11,7 @@ import (
 	"projetoweb2/internal/services"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
@@ -18,6 +19,32 @@ func main() {
 	conn, err := sql.Open("pgx", "postgres://postgres:postgres@localhost:5432/projetoweb2?sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	var dbName string
+	err = conn.QueryRow("SELECT current_database()").Scan(&dbName)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("Banco conectado:", dbName)
+
+	rows, err := conn.Query(`
+	SELECT table_name
+	FROM information_schema.tables
+	WHERE table_schema = 'public'
+	ORDER BY table_name;
+`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	log.Println("Tabelas encontradas:")
+	for rows.Next() {
+		var table string
+		rows.Scan(&table)
+		log.Println("-", table)
 	}
 
 	queries := db.New(conn)
@@ -39,6 +66,28 @@ func main() {
 	manufacturerHandler := handlers.NewManufacturerHandler(manufacturerService)
 
 	r := chi.NewRouter()
+
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins: []string{
+			"http://localhost:5173",
+		},
+
+		AllowedMethods: []string{
+			"GET",
+			"POST",
+			"PUT",
+			"DELETE",
+			"OPTIONS",
+		},
+
+		AllowedHeaders: []string{
+			"Accept",
+			"Authorization",
+			"Content-Type",
+		},
+
+		AllowCredentials: true,
+	}))
 
 	r.Post("/users", userHandler.CreateUser)
 	r.Post("/login", authHandler.Login)

@@ -1,9 +1,9 @@
-import "./style.css";
+import "./Navbar.css";
 
-export default function Navbar({ titulo }) {
+export default function Navbar() {
   return (
     <header className="navbar">
-      <h1>{titulo}</h1>
+      <h1>Sistema Patrimonial</h1>
     </header>
   );
 }

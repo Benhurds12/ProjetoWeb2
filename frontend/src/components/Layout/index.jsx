@@ -1,16 +1,15 @@
 import Sidebar from "../Sidebar";
 import Navbar from "../Navbar";
 
-export default function Layout({ titulo, children }) {
+import "./style.css";
+
+export default function Layout({ children }) {
   return (
-    <div className="page">
+    <>
       <Sidebar />
+      <Navbar />
 
-      <main className="content">
-        <Navbar titulo={titulo} />
-
-        {children}
-      </main>
-    </div>
+      <main className="content">{children}</main>
+    </>
   );
 }

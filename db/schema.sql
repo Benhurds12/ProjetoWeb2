@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     nome TEXT NOT NULL,
@@ -13,8 +15,6 @@ CREATE TABLE setores (
     local TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT NOW()
 );
-
-
 
 CREATE TABLE fornecedores (
     id SERIAL PRIMARY KEY,

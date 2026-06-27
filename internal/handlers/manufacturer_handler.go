@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
-	"strconv"
-
 	"projetoweb2/internal/services"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -47,7 +47,8 @@ func (h *ManufacturerHandler) CreateFabricante(w http.ResponseWriter, r *http.Re
 func (h *ManufacturerHandler) ListFabricantes(w http.ResponseWriter, r *http.Request) {
 	fabricantes, err := h.Service.ListFabricantes(r.Context())
 	if err != nil {
-		http.Error(w, "erro ao listar fabricantes", http.StatusInternalServerError)
+		log.Println("Erro ao listar fabricantes:", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

@@ -3,9 +3,10 @@ package services
 import (
 	"context"
 	"database/sql"
+	"projetoweb2/internal/db"
 	"testing"
 
-	"projetoweb2/internal/db"
+	"github.com/google/uuid"
 )
 
 type MockDB struct {
@@ -25,6 +26,12 @@ type MockDB struct {
 	errUpdateSetor  error
 
 	errDeleteSetor error
+
+	stubListSetores []db.Setore
+	errListSetores  error
+
+	stubListSetoresWithBens []db.ListSetoresWithBensRow
+	errListSetoresWithBens  error
 }
 
 func (m *MockDB) GetSetorByNome(ctx context.Context, nome string) (db.Setore, error) {
@@ -45,6 +52,14 @@ func (m *MockDB) UpdateSetor(ctx context.Context, arg db.UpdateSetorParams) (db.
 
 func (m *MockDB) DeleteSetor(ctx context.Context, id int32) error {
 	return m.errDeleteSetor
+}
+
+func (m *MockDB) ListSetores(ctx context.Context) ([]db.Setore, error) {
+	return m.stubListSetores, m.errListSetores
+}
+
+func (m *MockDB) ListSetoresWithBens(ctx context.Context) ([]db.ListSetoresWithBensRow, error) {
+	return m.stubListSetoresWithBens, m.errListSetoresWithBens
 }
 
 func TestCreateSetor_Sucesso(t *testing.T) {
@@ -197,5 +212,60 @@ func TestDeleteSetor_Sucesso(t *testing.T) {
 
 	if err != nil {
 		t.Errorf("Não esperava erro ao deletar, recebeu: %v", err)
+	}
+}
+
+func TestListSetoresWithBens_AgregacaoSucesso(t *testing.T) {
+	// Vamos simular um UUID válido para o Bem
+	bemIdValid := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+
+	mock := &MockDB{
+		// Simulamos o retorno do LEFT JOIN do banco de dados
+		stubListSetoresWithBens: []db.ListSetoresWithBensRow{
+			{
+				SetorID:    1,
+				SetorNome:  "TI",
+				SetorLocal: "Sala 1",
+				// Este setor TEM um bem
+				BemID:     uuid.NullUUID{UUID: bemIdValid, Valid: true},
+				BemNome:   sql.NullString{String: "Notebook Dell", Valid: true},
+				BemTipo:   sql.NullString{String: "Computador", Valid: true},
+				BemStatus: sql.NullString{String: "EM USO", Valid: true},
+			},
+			{
+				SetorID:    2,
+				SetorNome:  "RH",
+				SetorLocal: "Sala 2",
+				// Este setor NÃO TEM bens (Valid = false simula o NULL do banco)
+				BemID: uuid.NullUUID{Valid: false},
+			},
+		},
+	}
+
+	service := NewSectorService(mock)
+
+	resultado, err := service.ListSetoresWithBens(context.Background())
+
+	// 1. Verifica se não deu erro
+	if err != nil {
+		t.Errorf("Não esperava erro, recebeu: %v", err)
+	}
+
+	// 2. Verifica se agrupou corretamente em 2 setores
+	if len(resultado) != 2 {
+		t.Fatalf("Esperava 2 setores, recebeu %d", len(resultado))
+	}
+
+	// 3. Verifica o Setor de TI (deve ter 1 bem aninhado)
+	if resultado[0].Nome != "TI" || len(resultado[0].Bens) != 1 {
+		t.Errorf("Esperava 1 bem no setor TI, recebeu %d", len(resultado[0].Bens))
+	}
+	if resultado[0].Bens[0].Nome != "Notebook Dell" {
+		t.Errorf("Nome do bem agregado incorreto, recebeu: %s", resultado[0].Bens[0].Nome)
+	}
+
+	// 4. Verifica o Setor de RH (deve ter o slice de bens vazio, tamanho 0)
+	if resultado[1].Nome != "RH" || len(resultado[1].Bens) != 0 {
+		t.Errorf("Esperava 0 bens no setor RH, recebeu %d", len(resultado[1].Bens))
 	}
 }

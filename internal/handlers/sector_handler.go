@@ -112,3 +112,17 @@ func (h *SectorHandler) DeleteSetor(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func (h *SectorHandler) ListSetoresWithBens(w http.ResponseWriter, r *http.Request) {
+	// Chama o Service
+	setores, err := h.Service.ListSetoresWithBens(r.Context())
+	if err != nil {
+		http.Error(w, "Erro ao buscar setores com bens", http.StatusInternalServerError)
+		return
+	}
+
+	// Responde com o JSON
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(setores)
+}

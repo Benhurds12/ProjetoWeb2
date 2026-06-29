@@ -535,6 +535,61 @@ func (q *Queries) ListSetores(ctx context.Context) ([]Setore, error) {
 	return items, nil
 }
 
+const listSetoresWithBens = `-- name: ListSetoresWithBens :many
+SELECT
+    s.id AS setor_id, 
+    s.nome AS setor_nome,
+    s.local AS setor_local,
+    b.id AS bem_id, 
+    b.nome AS bem_nome, 
+    b.tipo AS bem_tipo,
+    b.status AS bem_status
+FROM setores s
+LEFT JOIN bens b ON b.setor_id = s.id
+ORDER BY s.id ASC, b.created_at ASC
+`
+
+type ListSetoresWithBensRow struct {
+	SetorID    int32
+	SetorNome  string
+	SetorLocal string
+	BemID      uuid.NullUUID
+	BemNome    sql.NullString
+	BemTipo    sql.NullString
+	BemStatus  sql.NullString
+}
+
+func (q *Queries) ListSetoresWithBens(ctx context.Context) ([]ListSetoresWithBensRow, error) {
+	rows, err := q.db.QueryContext(ctx, listSetoresWithBens)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListSetoresWithBensRow
+	for rows.Next() {
+		var i ListSetoresWithBensRow
+		if err := rows.Scan(
+			&i.SetorID,
+			&i.SetorNome,
+			&i.SetorLocal,
+			&i.BemID,
+			&i.BemNome,
+			&i.BemTipo,
+			&i.BemStatus,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUsers = `-- name: ListUsers :many
 SELECT id, nome, email, cpf, password, created_at FROM users
 `

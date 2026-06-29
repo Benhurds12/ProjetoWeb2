@@ -10,13 +10,17 @@ import (
 	"github.com/google/uuid"
 )
 
-// 1. Criamos um Mock focado apenas no que o AssetService precisa usar
 type MockAssetDB struct {
 	db.Querier
 
-	// Precisamos simular a busca de Setor, pois o AssetService valida isso!
 	stubGetSetorByID db.Setore
 	errGetSetorByID  error
+
+	stubGetFornecedorByID db.Fornecedore
+	errGetFornecedorByID  error
+
+	stubGetFabricanteByID db.Fabricante
+	errGetFabricanteByID  error
 
 	stubCreateBem db.Ben
 	errCreateBem  error
@@ -35,6 +39,14 @@ type MockAssetDB struct {
 
 func (m *MockAssetDB) GetSetorByID(ctx context.Context, id int32) (db.Setore, error) {
 	return m.stubGetSetorByID, m.errGetSetorByID
+}
+
+func (m *MockAssetDB) GetFornecedorByID(ctx context.Context, id int32) (db.Fornecedore, error) {
+	return m.stubGetFornecedorByID, m.errGetFornecedorByID
+}
+
+func (m *MockAssetDB) GetFabricanteByID(ctx context.Context, id int32) (db.Fabricante, error) {
+	return m.stubGetFabricanteByID, m.errGetFabricanteByID
 }
 
 func (m *MockAssetDB) CreateBem(ctx context.Context, arg db.CreateBemParams) (db.Ben, error) {
@@ -60,11 +72,8 @@ func (m *MockAssetDB) ListBens(ctx context.Context) ([]db.Ben, error) {
 func TestCreateBem_Sucesso(t *testing.T) {
 	setorID := int32(1)
 	mock := &MockAssetDB{
-		// Dizemos que o setor ID 1 existe (sem erro)
 		errGetSetorByID:  nil,
 		stubGetSetorByID: db.Setore{ID: 1, Nome: "TI"},
-
-		// Retorno esperado do Bem criado
 		stubCreateBem: db.Ben{
 			Nome:   "Notebook Dell",
 			Tipo:   "Eletrônico",
@@ -73,7 +82,7 @@ func TestCreateBem_Sucesso(t *testing.T) {
 	}
 	service := NewAssetService(mock)
 
-	bem, err := service.CreateBem(context.Background(), "Notebook Dell", "Eletrônico", "", &setorID)
+	bem, err := service.CreateBem(context.Background(), "Notebook Dell", "Eletrônico", "", &setorID, nil, nil)
 
 	if err != nil {
 		t.Errorf("Não esperava erro: %v", err)
@@ -84,10 +93,10 @@ func TestCreateBem_Sucesso(t *testing.T) {
 }
 
 func TestCreateBem_ErroCamposVazios(t *testing.T) {
-	mock := &MockAssetDB{} // Não chega a chamar o banco
+	mock := &MockAssetDB{}
 	service := NewAssetService(mock)
 
-	_, err := service.CreateBem(context.Background(), "", "", "", nil)
+	_, err := service.CreateBem(context.Background(), "", "", "", nil, nil, nil)
 
 	if err == nil || err.Error() != "nome e tipo são obrigatórios" {
 		t.Errorf("Esperava erro de campos obrigatórios, recebeu: %v", err)
@@ -97,12 +106,11 @@ func TestCreateBem_ErroCamposVazios(t *testing.T) {
 func TestCreateBem_ErroSetorNaoEncontrado(t *testing.T) {
 	setorIDInvalido := int32(99)
 	mock := &MockAssetDB{
-		// Simulamos que o banco NÃO ACHOU o setor
 		errGetSetorByID: sql.ErrNoRows,
 	}
 	service := NewAssetService(mock)
 
-	_, err := service.CreateBem(context.Background(), "Mesa", "Móvel", "ATIVO", &setorIDInvalido)
+	_, err := service.CreateBem(context.Background(), "Mesa", "Móvel", "ATIVO", &setorIDInvalido, nil, nil)
 
 	if err == nil || err.Error() != "setor não encontrado" {
 		t.Errorf("Esperava erro de setor não encontrado, recebeu: %v", err)
@@ -162,12 +170,12 @@ func TestUpdateBem_Sucesso(t *testing.T) {
 	idMock := uuid.New()
 	setorID := int32(1)
 	mock := &MockAssetDB{
-		errGetSetorByID: nil, // Setor existe!
+		errGetSetorByID: nil,
 		stubUpdateBem:   db.Ben{ID: idMock, Nome: "Monitor LG"},
 	}
 	service := NewAssetService(mock)
 
-	bem, err := service.UpdateBem(context.Background(), idMock, "Monitor LG", "Eletrônico", "ATIVO", &setorID)
+	bem, err := service.UpdateBem(context.Background(), idMock, "Monitor LG", "Eletrônico", "ATIVO", &setorID, nil, nil)
 
 	if err != nil {
 		t.Errorf("Não esperava erro: %v", err)
@@ -181,7 +189,7 @@ func TestUpdateBem_ErroCamposVazios(t *testing.T) {
 	mock := &MockAssetDB{}
 	service := NewAssetService(mock)
 
-	_, err := service.UpdateBem(context.Background(), uuid.New(), "", "", "ATIVO", nil)
+	_, err := service.UpdateBem(context.Background(), uuid.New(), "", "", "ATIVO", nil, nil, nil)
 
 	if err == nil || err.Error() != "nome e tipo são obrigatórios" {
 		t.Errorf("Esperava erro de campos obrigatórios, recebeu: %v", err)

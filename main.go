@@ -56,6 +56,7 @@ func main() {
 		r.Get("/setores/{id}", sectorHandler.GetSetor)
 		r.Put("/setores/{id}", sectorHandler.UpdateSetor)
 		r.Delete("/setores/{id}", sectorHandler.DeleteSetor)
+		r.Get("/setores-bens", sectorHandler.ListSetoresWithBens)
 
 		r.Post("/bens", assetHandler.CreateBem)
 		r.Get("/bens", assetHandler.ListBens)

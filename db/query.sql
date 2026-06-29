@@ -54,6 +54,19 @@ WHERE id = $1;
 SELECT * FROM setores
 WHERE nome = $1;
 
+-- name: ListSetoresWithBens :many
+SELECT
+    s.id AS setor_id, 
+    s.nome AS setor_nome,
+    s.local AS setor_local,
+    b.id AS bem_id, 
+    b.nome AS bem_nome, 
+    b.tipo AS bem_tipo,
+    b.status AS bem_status
+FROM setores s
+LEFT JOIN bens b ON b.setor_id = s.id
+ORDER BY s.id ASC, b.created_at ASC;
+
 -- name: CreateBem :one
 INSERT INTO bens (
     id,

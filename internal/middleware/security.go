@@ -1,6 +1,9 @@
 package middleware
 
-import "net/http"
+import (
+	"net/http"
+	"strings"
+)
 
 // SecurityHeaders adiciona cabeçalhos de segurança em todas as respostas,
 // mitigando ataques comuns (clickjacking, MIME sniffing, vazamento de referrer).
@@ -13,8 +16,13 @@ func SecurityHeaders(next http.Handler) http.Handler {
 		w.Header().Set("X-Frame-Options", "DENY")
 		// Não vaza a URL de origem em requisições para outros sites.
 		w.Header().Set("Referrer-Policy", "no-referrer")
-		// Como é uma API JSON, restringe o que pode ser carregado/embutido.
-		w.Header().Set("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'")
+		// O Swagger UI precisa carregar scripts, estilos e imagens próprias.
+		if strings.HasPrefix(r.URL.Path, "/swagger/") {
+			w.Header().Set("Content-Security-Policy", "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; frame-ancestors 'none'")
+		} else {
+			// Como é uma API JSON, restringe o que pode ser carregado/embutido.
+			w.Header().Set("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'")
+		}
 
 		next.ServeHTTP(w, r)
 	})

@@ -1,0 +1,513 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "SCI - Sistema de Controle de Inventário",
+    "version": "1.0.0",
+    "description": "Documentação da API REST do projeto SCI com autenticação JWT, refresh token e rotas protegidas."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Ambiente local"
+    }
+  ],
+  "tags": [
+    {"name": "Auth", "description": "Autenticação e sessão"},
+    {"name": "Users", "description": "Usuários"},
+    {"name": "Setores", "description": "Setores e relacionamento com bens"},
+    {"name": "Bens", "description": "Ativos"},
+    {"name": "Fornecedores", "description": "Fornecedores"},
+    {"name": "Fabricantes", "description": "Fabricantes"}
+  ],
+  "paths": {
+    "/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login do usuário",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": {"type": "string", "format": "email", "example": "usuario@email.com"},
+                  "password": {"type": "string", "format": "password", "example": "senha123"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Login realizado com sucesso"},
+          "401": {"description": "Credenciais inválidas", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      }
+    },
+    "/refresh": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Renova o access token usando o refresh token",
+        "responses": {
+          "200": {"description": "Token renovado com sucesso"},
+          "401": {"description": "Refresh token inválido ou expirado", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      }
+    },
+    "/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Logout do usuário",
+        "responses": {
+          "200": {"description": "Logout realizado com sucesso"},
+          "401": {"description": "Não autorizado", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      }
+    },
+    "/users": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Cria um novo usuário",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/UserInput"}
+            }
+          }
+        },
+        "responses": {
+          "201": {"description": "Usuário criado com sucesso"},
+          "400": {"description": "Dados inválidos", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      },
+      "get": {
+        "tags": ["Users"],
+        "summary": "Lista todos os usuários",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {"description": "Lista de usuários"},
+          "401": {"description": "Não autorizado", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Busca um usuário pelo ID",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Usuário encontrado"},
+          "404": {"description": "Usuário não encontrado", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      },
+      "put": {
+        "tags": ["Users"],
+        "summary": "Atualiza um usuário",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/UserInput"}
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Usuário atualizado"},
+          "404": {"description": "Usuário não encontrado", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      },
+      "delete": {
+        "tags": ["Users"],
+        "summary": "Remove um usuário",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Usuário removido"},
+          "404": {"description": "Usuário não encontrado", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      }
+    },
+    "/setores": {
+      "post": {
+        "tags": ["Setores"],
+        "summary": "Cria um novo setor",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/SetorInput"}
+            }
+          }
+        },
+        "responses": {
+          "201": {"description": "Setor criado"},
+          "400": {"description": "Dados inválidos", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      },
+      "get": {
+        "tags": ["Setores"],
+        "summary": "Lista todos os setores",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {"description": "Lista de setores"}
+        }
+      }
+    },
+    "/setores/{id}": {
+      "get": {
+        "tags": ["Setores"],
+        "summary": "Busca um setor pelo ID",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Setor encontrado"},
+          "404": {"description": "Setor não encontrado", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      },
+      "put": {
+        "tags": ["Setores"],
+        "summary": "Atualiza um setor",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/SetorInput"}
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Setor atualizado"},
+          "404": {"description": "Setor não encontrado", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      },
+      "delete": {
+        "tags": ["Setores"],
+        "summary": "Remove um setor",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Setor removido"},
+          "404": {"description": "Setor não encontrado", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      }
+    },
+    "/setores-bens": {
+      "get": {
+        "tags": ["Setores"],
+        "summary": "Lista setores com seus respectivos bens",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {"description": "Lista de setores com bens"}
+        }
+      }
+    },
+    "/bens": {
+      "post": {
+        "tags": ["Bens"],
+        "summary": "Cria um novo bem",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/BemInput"}
+            }
+          }
+        },
+        "responses": {
+          "201": {"description": "Bem criado"},
+          "400": {"description": "Dados inválidos", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      },
+      "get": {
+        "tags": ["Bens"],
+        "summary": "Lista todos os bens",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {"description": "Lista de bens"}
+        }
+      }
+    },
+    "/bens/{id}": {
+      "get": {
+        "tags": ["Bens"],
+        "summary": "Busca um bem pelo ID",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Bem encontrado"},
+          "404": {"description": "Bem não encontrado", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      },
+      "put": {
+        "tags": ["Bens"],
+        "summary": "Atualiza um bem",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/BemInput"}
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Bem atualizado"},
+          "404": {"description": "Bem não encontrado", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      },
+      "delete": {
+        "tags": ["Bens"],
+        "summary": "Remove um bem",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Bem removido"},
+          "404": {"description": "Bem não encontrado", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      }
+    },
+    "/fornecedores": {
+      "post": {
+        "tags": ["Fornecedores"],
+        "summary": "Cria um novo fornecedor",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/FornecedorInput"}
+            }
+          }
+        },
+        "responses": {
+          "201": {"description": "Fornecedor criado"},
+          "400": {"description": "Dados inválidos", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      },
+      "get": {
+        "tags": ["Fornecedores"],
+        "summary": "Lista todos os fornecedores",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {"description": "Lista de fornecedores"}
+        }
+      }
+    },
+    "/fornecedores/{id}": {
+      "get": {
+        "tags": ["Fornecedores"],
+        "summary": "Busca um fornecedor pelo ID",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Fornecedor encontrado"},
+          "404": {"description": "Fornecedor não encontrado", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      },
+      "put": {
+        "tags": ["Fornecedores"],
+        "summary": "Atualiza um fornecedor",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/FornecedorInput"}
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Fornecedor atualizado"},
+          "404": {"description": "Fornecedor não encontrado", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      },
+      "delete": {
+        "tags": ["Fornecedores"],
+        "summary": "Remove um fornecedor",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Fornecedor removido"},
+          "404": {"description": "Fornecedor não encontrado", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      }
+    },
+    "/fabricantes": {
+      "post": {
+        "tags": ["Fabricantes"],
+        "summary": "Cria um novo fabricante",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/FabricanteInput"}
+            }
+          }
+        },
+        "responses": {
+          "201": {"description": "Fabricante criado"},
+          "400": {"description": "Dados inválidos", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      },
+      "get": {
+        "tags": ["Fabricantes"],
+        "summary": "Lista todos os fabricantes",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {"description": "Lista de fabricantes"}
+        }
+      }
+    },
+    "/fabricantes/{id}": {
+      "get": {
+        "tags": ["Fabricantes"],
+        "summary": "Busca um fabricante pelo ID",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Fabricante encontrado"},
+          "404": {"description": "Fabricante não encontrado", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      },
+      "put": {
+        "tags": ["Fabricantes"],
+        "summary": "Atualiza um fabricante",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/FabricanteInput"}
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Fabricante atualizado"},
+          "404": {"description": "Fabricante não encontrado", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      },
+      "delete": {
+        "tags": ["Fabricantes"],
+        "summary": "Remove um fabricante",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Fabricante removido"},
+          "404": {"description": "Fabricante não encontrado", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {"type": "string"}
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string"}
+        }
+      },
+      "UserInput": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {"type": "string", "format": "email"},
+          "password": {"type": "string", "format": "password"},
+          "name": {"type": "string"}
+        }
+      },
+      "SetorInput": {
+        "type": "object",
+        "required": ["nome"],
+        "properties": {
+          "nome": {"type": "string"},
+          "descricao": {"type": "string"}
+        }
+      },
+      "BemInput": {
+        "type": "object",
+        "required": ["nome", "setor_id"],
+        "properties": {
+          "nome": {"type": "string"},
+          "descricao": {"type": "string"},
+          "setor_id": {"type": "string"},
+          "fornecedor_id": {"type": "string"},
+          "fabricante_id": {"type": "string"},
+          "numero_serie": {"type": "string"}
+        }
+      },
+      "FornecedorInput": {
+        "type": "object",
+        "required": ["nome"],
+        "properties": {
+          "nome": {"type": "string"},
+          "cnpj": {"type": "string"},
+          "contato": {"type": "string"}
+        }
+      },
+      "FabricanteInput": {
+        "type": "object",
+        "required": ["nome"],
+        "properties": {
+          "nome": {"type": "string"},
+          "pais": {"type": "string"}
+        }
+      }
+    }
+  }
+}

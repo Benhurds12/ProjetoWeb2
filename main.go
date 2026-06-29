@@ -20,6 +20,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func main() {
@@ -53,6 +54,10 @@ func main() {
 
 	// Cabeçalhos de segurança em todas as respostas (OWASP A05).
 	r.Use(middleware.SecurityHeaders)
+
+	// Swagger UI e especificação OpenAPI.
+	r.Get("/swagger/doc.json", handlers.SwaggerDocHandler)
+	r.Get("/swagger/*", httpSwagger.WrapHandler)
 
 	// Health checks para monitoramento e orquestradores.
 	r.Get("/healthz", healthHandler.Healthz)

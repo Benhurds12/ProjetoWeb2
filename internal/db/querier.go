@@ -16,6 +16,8 @@ type Querier interface {
 	CreateFabricante(ctx context.Context, arg CreateFabricanteParams) (Fabricante, error)
 	// FORNECEDORES
 	CreateFornecedor(ctx context.Context, arg CreateFornecedorParams) (Fornecedore, error)
+	// REFRESH TOKENS
+	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error)
 	CreateSetor(ctx context.Context, arg CreateSetorParams) (Setore, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteBem(ctx context.Context, id uuid.UUID) error
@@ -28,6 +30,7 @@ type Querier interface {
 	GetFabricanteByID(ctx context.Context, id int32) (Fabricante, error)
 	GetFornecedorByCnpj(ctx context.Context, cnpj string) (Fornecedore, error)
 	GetFornecedorByID(ctx context.Context, id int32) (Fornecedore, error)
+	GetRefreshTokenByHash(ctx context.Context, tokenHash string) (RefreshToken, error)
 	GetSetorByID(ctx context.Context, id int32) (Setore, error)
 	GetSetorByNome(ctx context.Context, nome string) (Setore, error)
 	GetUserByCpf(ctx context.Context, cpf string) (User, error)
@@ -39,6 +42,8 @@ type Querier interface {
 	ListSetores(ctx context.Context) ([]Setore, error)
 	ListSetoresWithBens(ctx context.Context) ([]ListSetoresWithBensRow, error)
 	ListUsers(ctx context.Context) ([]User, error)
+	RevokeAllUserRefreshTokens(ctx context.Context, userID int32) error
+	RevokeRefreshToken(ctx context.Context, id uuid.UUID) error
 	UpdateBem(ctx context.Context, arg UpdateBemParams) (Ben, error)
 	UpdateFabricante(ctx context.Context, arg UpdateFabricanteParams) (Fabricante, error)
 	UpdateFornecedor(ctx context.Context, arg UpdateFornecedorParams) (Fornecedore, error)

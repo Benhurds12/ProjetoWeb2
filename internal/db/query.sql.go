@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -107,6 +108,40 @@ func (q *Queries) CreateFornecedor(ctx context.Context, arg CreateFornecedorPara
 		&i.Nome,
 		&i.Cnpj,
 		&i.Contato,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const createRefreshToken = `-- name: CreateRefreshToken :one
+
+INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at)
+VALUES ($1, $2, $3, $4)
+RETURNING id, user_id, token_hash, expires_at, revoked, created_at
+`
+
+type CreateRefreshTokenParams struct {
+	ID        uuid.UUID
+	UserID    int32
+	TokenHash string
+	ExpiresAt time.Time
+}
+
+// REFRESH TOKENS
+func (q *Queries) CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error) {
+	row := q.db.QueryRowContext(ctx, createRefreshToken,
+		arg.ID,
+		arg.UserID,
+		arg.TokenHash,
+		arg.ExpiresAt,
+	)
+	var i RefreshToken
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.TokenHash,
+		&i.ExpiresAt,
+		&i.Revoked,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -304,6 +339,25 @@ func (q *Queries) GetFornecedorByID(ctx context.Context, id int32) (Fornecedore,
 		&i.Nome,
 		&i.Cnpj,
 		&i.Contato,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getRefreshTokenByHash = `-- name: GetRefreshTokenByHash :one
+SELECT id, user_id, token_hash, expires_at, revoked, created_at FROM refresh_tokens
+WHERE token_hash = $1
+`
+
+func (q *Queries) GetRefreshTokenByHash(ctx context.Context, tokenHash string) (RefreshToken, error) {
+	row := q.db.QueryRowContext(ctx, getRefreshTokenByHash, tokenHash)
+	var i RefreshToken
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.TokenHash,
+		&i.ExpiresAt,
+		&i.Revoked,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -622,6 +676,28 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const revokeAllUserRefreshTokens = `-- name: RevokeAllUserRefreshTokens :exec
+UPDATE refresh_tokens
+SET revoked = TRUE
+WHERE user_id = $1
+`
+
+func (q *Queries) RevokeAllUserRefreshTokens(ctx context.Context, userID int32) error {
+	_, err := q.db.ExecContext(ctx, revokeAllUserRefreshTokens, userID)
+	return err
+}
+
+const revokeRefreshToken = `-- name: RevokeRefreshToken :exec
+UPDATE refresh_tokens
+SET revoked = TRUE
+WHERE id = $1
+`
+
+func (q *Queries) RevokeRefreshToken(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, revokeRefreshToken, id)
+	return err
 }
 
 const updateBem = `-- name: UpdateBem :one

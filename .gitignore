@@ -1,0 +1,9 @@
+# Variáveis de ambiente com segredos
+.env
+
+# Binários compilados
+/projetoweb2
+*.exe
+
+# Arquivos de cobertura de testes
+coverage.out

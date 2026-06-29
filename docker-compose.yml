@@ -12,6 +12,25 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d projetoweb2"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: projetoweb2_api
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-local-troque-em-producao-9f3a7b21c8}
+      # Dentro da rede do compose o host do banco é o nome do serviço "postgres".
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/projetoweb2?sslmode=disable
+    ports:
+      - "8080:8080"
 
 volumes:
   postgres_data:

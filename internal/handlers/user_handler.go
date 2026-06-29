@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"projetoweb2/internal/db"
 	"projetoweb2/internal/services"
 
 	"github.com/go-chi/chi/v5"
@@ -16,6 +17,24 @@ type UserHandler struct {
 
 func NewUserHandler(service *services.UserService) *UserHandler {
 	return &UserHandler{Service: service}
+}
+
+// UserOut é a representação pública de um usuário.
+// Omitimos o hash da senha para nunca expô-lo nas respostas da API (OWASP A02 – Cryptographic Failures).
+type UserOut struct {
+	ID    int32  `json:"id"`
+	Nome  string `json:"nome"`
+	Email string `json:"email"`
+	Cpf   string `json:"cpf"`
+}
+
+func toUserOut(u db.User) UserOut {
+	return UserOut{
+		ID:    u.ID,
+		Nome:  u.Nome,
+		Email: u.Email,
+		Cpf:   u.Cpf,
+	}
 }
 
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +56,9 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(user)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(toUserOut(user))
 }
 
 func (h *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +68,13 @@ func (h *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(users)
+	out := make([]UserOut, 0, len(users))
+	for _, u := range users {
+		out = append(out, toUserOut(u))
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(out)
 }
 
 func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
@@ -65,7 +92,8 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(user)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(toUserOut(user))
 }
 
 func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
@@ -94,7 +122,8 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(user)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(toUserOut(user))
 }
 
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {

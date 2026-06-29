@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"projetoweb2/internal/handlers"
+	"projetoweb2/internal/config"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -33,7 +33,11 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		// Valida o token
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			return handlers.JwtSecret, nil
+			// Garante que o algoritmo de assinatura é o esperado (evita ataques de "alg none"/troca de algoritmo).
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, jwt.ErrSignatureInvalid
+			}
+			return config.JwtSecret, nil
 		})
 
 		if err != nil || !token.Valid {

@@ -9,6 +9,17 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Refresh tokens persistidos para permitir rotação e revogação.
+-- Guardamos apenas o hash do token (nunca o valor em texto puro).
+CREATE TABLE refresh_tokens (
+    id UUID PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash TEXT UNIQUE NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    revoked BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
 CREATE TABLE setores (
     id SERIAL PRIMARY KEY,
     nome TEXT UNIQUE NOT NULL,

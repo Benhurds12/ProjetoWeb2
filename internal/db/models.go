@@ -6,6 +6,7 @@ package db
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -33,6 +34,15 @@ type Fornecedore struct {
 	Nome      string
 	Cnpj      string
 	Contato   string
+	CreatedAt sql.NullTime
+}
+
+type RefreshToken struct {
+	ID        uuid.UUID
+	UserID    int32
+	TokenHash string
+	ExpiresAt time.Time
+	Revoked   bool
 	CreatedAt sql.NullTime
 }
 

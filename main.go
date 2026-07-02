@@ -32,32 +32,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var dbName string
-	err = conn.QueryRow("SELECT current_database()").Scan(&dbName)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.Println("Banco conectado:", dbName)
-
-	rows, err := conn.Query(`
-	SELECT table_name
-	FROM information_schema.tables
-	WHERE table_schema = 'public'
-	ORDER BY table_name;
-`)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rows.Close()
-
-	log.Println("Tabelas encontradas:")
-	for rows.Next() {
-		var table string
-		rows.Scan(&table)
-		log.Println("-", table)
-	}
-
 	queries := db.New(conn)
 
 	userService := services.NewUserService(queries)

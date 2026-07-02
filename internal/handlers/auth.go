@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
@@ -106,8 +107,15 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// refreshToken, err := h.issueRefreshToken(r, user.ID)
+	// if err != nil {
+	// 	http.Error(w, "erro ao gerar refresh token", http.StatusInternalServerError)
+	// 	return
+	// }
+
 	refreshToken, err := h.issueRefreshToken(r, user.ID)
 	if err != nil {
+		log.Printf("Erro ao criar refresh token: %v", err)
 		http.Error(w, "erro ao gerar refresh token", http.StatusInternalServerError)
 		return
 	}

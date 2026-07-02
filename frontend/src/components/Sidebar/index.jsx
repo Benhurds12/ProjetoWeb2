@@ -8,9 +8,31 @@ import {
   FaSignOutAlt,
 } from "react-icons/fa";
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import api from "../../services/api";
 
 export default function Sidebar() {
+  const navigate = useNavigate();
+
+  async function logout() {
+    try {
+      const refreshToken = localStorage.getItem("@SCI:refreshToken");
+
+      if (refreshToken) {
+        await api.post("/logout", {
+          refresh_token: refreshToken,
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao realizar logout:", error);
+    } finally {
+      localStorage.removeItem("@SCI:token");
+      localStorage.removeItem("@SCI:refreshToken");
+
+      navigate("/");
+    }
+  }
+
   return (
     <aside className="sidebar">
       <h2>Patrimônio</h2>
@@ -37,9 +59,8 @@ export default function Sidebar() {
         </Link>
       </nav>
 
-      <button>
+      <button onClick={logout}>
         <FaSignOutAlt />
-
         <span>Sair</span>
       </button>
     </aside>

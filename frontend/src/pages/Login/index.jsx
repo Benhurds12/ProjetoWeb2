@@ -22,15 +22,12 @@ export default function Login() {
         password,
       });
 
-      localStorage.setItem("@SCI:token", data.token);
+      localStorage.setItem("@SCI:token", data.access_token);
+      localStorage.setItem("@SCI:refreshToken", data.refresh_token);
 
       navigate("/bens");
     } catch (error) {
-      if (error.response?.data) {
-        alert(error.response.data);
-      } else {
-        alert("Erro ao realizar login.");
-      }
+      alert(error.response?.data || "Erro ao realizar login.");
     } finally {
       setLoading(false);
     }
